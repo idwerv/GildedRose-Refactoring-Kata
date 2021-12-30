@@ -14,6 +14,7 @@ repositories {
 dependencies {
 	implementation(kotlin("stdlib"))
 	testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+	testImplementation("com.natpryce:hamkrest:1.8.0.1")
 }
 
 tasks.test {
