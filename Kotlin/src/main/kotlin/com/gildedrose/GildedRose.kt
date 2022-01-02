@@ -3,6 +3,7 @@ package com.gildedrose
 private const val AGED_BRIE = "Aged Brie"
 private const val BACKSTAGE_PASS = "Backstage passes to a TAFKAL80ETC concert"
 private const val SULFURAS = "Sulfuras, Hand of Ragnaros"
+private const val CONJURED_ITEM = "Conjured item"
 private const val DEFAULT = ""
 
 
@@ -14,14 +15,16 @@ class GildedRose(var items: Array<Item>) {
                 qualityRules.firstOrNull { it.name == item.name } ?: qualityRules.first { it.name == DEFAULT }
             if (rule.sellInAdjustment) item.sellIn -= 1
 
-            item.quality =
-                (item.quality + rule.qualityIncrement(item) + pastDueDateAdjustment(item, rule)).coerceIn(0..50)
+            item.quality = (item.quality + getQualityAdjustment(item, rule)).coerceIn(0..50)
         }
+    }
+
+    private fun getQualityAdjustment(item: Item, rule: QualityRule): Int {
+        return (rule.qualityIncrement(item) + pastDueDateAdjustment(item, rule)) * if (rule.conjuredItem) 2 else 1
     }
 
     private fun pastDueDateAdjustment(item: Item, rule: QualityRule): Int =
         if (item.sellIn >= 0) 0 else rule.pastDueDateAdjustment(item)
-
 }
 
 class QualityRule(
@@ -34,8 +37,9 @@ class QualityRule(
 
 val qualityRules = arrayOf(
     QualityRule(AGED_BRIE, { 1 }, { 1 }),
-    QualityRule(BACKSTAGE_PASS, { backstagePassRule(it) }, { -it.quality } ),
+    QualityRule(BACKSTAGE_PASS, { backstagePassRule(it) }, { -it.quality }),
     QualityRule(SULFURAS, { 0 }, { 0 }, false),
+    QualityRule(CONJURED_ITEM, conjuredItem = true),
     QualityRule(DEFAULT)
 )
 
