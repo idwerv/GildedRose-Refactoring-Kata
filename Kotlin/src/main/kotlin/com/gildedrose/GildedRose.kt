@@ -1,64 +1,47 @@
 package com.gildedrose
 
+private const val AGED_BRIE = "Aged Brie"
+private const val BACKSTAGE_PASS = "Backstage passes to a TAFKAL80ETC concert"
+private const val SULFURAS = "Sulfuras, Hand of Ragnaros"
+
 class GildedRose(var items: Array<Item>) {
 
     fun updateQuality() {
         for (item in items) {
+            updateSellIn(item)
+            updateItemQuality(item)
+        }
+    }
 
-            // Decrease the -QUALITY- by 1, except for Aged Brie, Backstage passes and Sulfuras
-            if (item.name != "Aged Brie" && item.name != "Backstage passes to a TAFKAL80ETC concert") {
-                if (item.quality > 0) {
-                    if (item.name != "Sulfuras, Hand of Ragnaros") {
-                        item.quality = item.quality - 1
-                    }
-                }
-            } else {
-                // Aged Brie & Backstage passes -QUALITY- changes
-                if (item.quality < 50) {
-                    item.quality = item.quality + 1
+    fun updateSellIn(item: Item) {
+        if (item.name != SULFURAS) item.sellIn -= 1
+    }
 
-                    // Backstage passes only code
-                    if (item.name == "Backstage passes to a TAFKAL80ETC concert") {
-                        if (item.sellIn < 11) {
-                            if (item.quality < 50) {
-                                item.quality = item.quality + 1
-                            }
-                        }
-
-                        if (item.sellIn < 6) {
-                            if (item.quality < 50) {
-                                item.quality = item.quality + 1
-                            }
-                        }
-                    }
+    private fun updateItemQuality(item: Item) {
+        item.quality = when (item.name) {
+            AGED_BRIE -> item.quality + 1
+            BACKSTAGE_PASS -> {
+                when (item.sellIn) {
+                    in 0..4 -> item.quality + 3
+                    in 5..9 -> item.quality + 2
+                    in 10..49 -> item.quality + 1
+                    else -> 0
                 }
             }
+            SULFURAS -> item.quality
+            else -> item.quality - 1
+        }.plus(getSellInQualityAdjustment(item))
+            .coerceIn(0..50)
+    }
 
-            // Decrease -SELLIN- date by 1, except for Sulfuras
-            if (item.name != "Sulfuras, Hand of Ragnaros") {
-                item.sellIn = item.sellIn - 1
-            }
-
-            if (item.sellIn < 0) {
-                if (item.name != "Aged Brie") {
-                    if (item.name != "Backstage passes to a TAFKAL80ETC concert") {
-                        if (item.quality > 0) {
-                            if (item.name != "Sulfuras, Hand of Ragnaros") {
-                                item.quality = item.quality - 1
-                            }
-                        }
-                    // Backstage passes QUALITY = 0 when SellIn date is 0 or less.
-                    } else {
-                        item.quality = item.quality - item.quality
-                    }
-                // Aged Brie
-                } else {
-                    if (item.quality < 50) {
-                        item.quality = item.quality + 1
-                    }
-                }
-            }
+    private fun getSellInQualityAdjustment(item: Item): Int {
+        if (item.sellIn >= 0) return 0
+        return when (item.name) {
+            AGED_BRIE -> 1
+            BACKSTAGE_PASS, SULFURAS -> 0
+            else -> -1
         }
     }
 }
+
 
